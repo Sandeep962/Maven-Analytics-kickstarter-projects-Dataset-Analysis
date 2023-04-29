@@ -1,0 +1,191 @@
+Kiackstarter Project Analysis in Google BigQuery---
+_______________________________________
+(https://console.cloud.google.com/bigquery?sq=1088166550175:77e899a5ac5a4888b4fba32ca8de1f31)
+(https://console.cloud.google.com/bigquery?sq=1088166550175:77e899a5ac5a4888b4fba32ca8de1f31)
+(https://console.cloud.google.com/bigquery?authuser=1&project=kickstarterproject-384416&ws=!1m10!1m4!4m3!1skickstarterproject-384416!2sDataSet1!3sFundData!1m4!1m3!1skickstarterproject-384416!2sbquxjob_3f8e8e7e_187cce78bdc!3sUS)
+
+-- To see the total number of columns and data
+SELECT * FROM `kickstarterproject-384416.DataSet1.FundData` ;
+
+
+-- To see number of records
+SELECT count(*) FROM `kickstarterproject-384416.DataSet1.FundData` ;
+
+
+-- Useful columns
+SELECT ID,Country,Category,Subcategory,Launched,Deadline,Goal,Pledged,Backers,State  
+FROM `kickstarterproject-384416.DataSet1.FundData`
+order by Country, Launched ;
+
+
+--Total number of projects per country
+WITH Num_Of_Project_per_Country AS(
+  SELECT Country,count(ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` 
+group by Country 
+)
+SELECT * FROM Num_Of_Project_per_Country ORDER BY Num_Of_Project_per_Country.Number_Of_Projects desc;
+
+
+--Grouping the data according to country,category,sub-category to see Number of Projects accordingly
+SELECT KS.Country ,KS.Category,KS.Subcategory,count(KS.ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+GROUP BY KS.Country ,KS.Category,KS.Subcategory
+ORDER BY KS.Country, KS.Category,KS.Subcategory;
+
+
+-- Grouping the data according to country,category,sub-category and state to see Number of Projects accordingly
+SELECT KS.Country ,KS.Category,KS.Subcategory,KS.State,count(KS.ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+GROUP BY KS.Country ,KS.Category,KS.Subcategory,KS.State
+ORDER BY KS.Country, KS.Category,KS.Subcategory, KS.State;
+
+
+-- Grouping the data according to country,category,sub-category and state when project is succesfull
+SELECT KS.Country ,KS.Category,KS.Subcategory,KS.State,count(KS.ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+WHERE KS.State="Successful"
+GROUP BY KS.Country ,KS.Category,KS.Subcategory,KS.State
+ORDER BY KS.Country, KS.Category,KS.Subcategory, KS.State;
+
+
+-- Grouping the data according to country,category,sub-category and state when project is unsuccesfull
+SELECT KS.Country ,KS.Category,KS.Subcategory,KS.State,count(KS.ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+WHERE KS.State="Failed"
+GROUP BY KS.Country ,KS.Category,KS.Subcategory,KS.State
+ORDER BY KS.Country, KS.Category,KS.Subcategory, KS.State;
+
+
+--Determining the success rate of projects at subcategory level
+WITH Num_Of_Project_per_Subcategory AS(
+SELECT KS.Country c1 ,KS.Category c2,KS.Subcategory sc1,count(KS.ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+GROUP BY KS.Country ,KS.Category,KS.Subcategory
+ORDER BY KS.Country, KS.Category,KS.Subcategory
+)
+,
+Num_Of_Successful_Project_per_Subcategory AS(
+SELECT KS.Country ks_country ,KS.Category ks_category,KS.Subcategory ks_subcategory,KS.State ks_state,count(KS.ID) AS Number_Of_Successfull_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+WHERE KS.State="Successful"
+GROUP BY KS.Country ,KS.Category,KS.Subcategory,KS.State
+ORDER BY KS.Country, KS.Category,KS.Subcategory, KS.State
+)
+
+SELECT NP.c1 Country,NP.c2 Category,NP.sc1 SubCategory, NP.Number_Of_Projects Number_Of_Projects,NSP.ks_state ProjectState,NSP.Number_Of_Successfull_Projects Number_Of_Successfull_Projects, ROUND((NSP.Number_Of_Successfull_Projects/NP.Number_Of_Projects)*100) Success_Rate FROM Num_Of_Project_per_Subcategory NP INNER JOIN Num_Of_Successful_Project_per_Subcategory NSP
+ON NP.c1=NSP.ks_country AND NP.c2=NSP.ks_category AND NP.sc1=NSP.ks_subcategory
+ORDER BY NP.c1,NP.c2;
+
+
+--Determining the failure rate of projects at subcategory level
+WITH Num_Of_Project_per_Subcategory AS(
+SELECT KS.Country c1 ,KS.Category c2,KS.Subcategory sc1,count(KS.ID) AS Number_Of_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+GROUP BY KS.Country ,KS.Category,KS.Subcategory
+ORDER BY KS.Country, KS.Category,KS.Subcategory
+)
+,
+Num_Of_Unsuccessfull_Project_per_Subcategory AS(
+SELECT KS.Country ks_country ,KS.Category ks_category,KS.Subcategory ks_subcategory,KS.State ks_state,count(KS.ID) AS Number_Of_Unsuccessfull_Projects FROM `kickstarterproject-384416.DataSet1.FundData` AS KS 
+WHERE KS.State="Failed"
+GROUP BY KS.Country ,KS.Category,KS.Subcategory,KS.State
+ORDER BY KS.Country, KS.Category,KS.Subcategory, KS.State
+)
+
+SELECT NP.c1 Country,NP.c2 Category,NP.sc1 SubCategory, NP.Number_Of_Projects Number_Of_Projects,NSP.ks_state ProjectState,
+NSP.Number_Of_Unsuccessfull_Projects Number_Of_Unsuccessfull_Projects, (NSP.Number_Of_Unsuccessfull_Projects/NP.Number_Of_Projects)*100 Failure_Rate  FROM Num_Of_Project_per_Subcategory NP INNER JOIN Num_Of_Unsuccessfull_Project_per_Subcategory NSP
+ON NP.c1=NSP.ks_country AND NP.c2=NSP.ks_category AND NP.sc1=NSP.ks_subcategory
+ORDER BY NP.c1,NP.c2;
+
+
+--Determimn the effect of Goal on the success of projects
+SELECT Country, Category, Subcategory ,ROUND(AVG(Goal)) Average_Goal FROM `kickstarterproject-384416.DataSet1.FundData`
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory;
+
+SELECT Country, Category, Subcategory ,ROUND(AVG(Goal)) Average_Success_Goal FROM `kickstarterproject-384416.DataSet1.FundData`
+WHERE State="Successful"
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory;
+
+WITH Average_Project_Goal AS (
+  SELECT Country c1, Category cat1, Subcategory subcat1 ,ROUND(AVG(Goal)) Average_Goal FROM `kickstarterproject-384416.DataSet1.FundData`
+  GROUP BY Country, Category, Subcategory
+  ORDER BY Country, Category, Subcategory
+)
+,
+Average_Successfull_Project_Goal AS (
+  SELECT Country c2, Category cat2, Subcategory subcat2,ROUND(AVG(Goal)) Average_Success_Goal FROM `kickstarterproject-384416.DataSet1.FundData`
+  WHERE State="Successful"
+  GROUP BY Country, Category, Subcategory
+  ORDER BY Country, Category, Subcategory
+)
+SELECT APG.c1 Country,APG.cat1 Category,APG.subcat1 Subcategory,APG.Average_Goal Average_Goal,ASPG.Average_Success_Goal Succesful_AVG_Goal,
+ROUND((ASPG.Average_Success_Goal/APG.Average_Goal)*100) AS PercentOfAverageGoal
+FROM Average_Project_Goal APG INNER JOIN Average_Successfull_Project_Goal ASPG 
+ON APG.c1=ASPG.c2 AND APG.cat1=ASPG.cat2 AND APG.subcat1=ASPG.subcat2
+ORDER BY APG.c1,APG.cat1,APG.subcat1;
+
+
+
+--Determine the effect of Backers on the success of the project
+SELECT Country, Category, Subcategory ,ROUND(AVG(Goal)) Average_Goal,ROUND(AVG(Pledged)) Average_Pledged,
+ROUND(AVG(Backers)) Average_Backers FROM `kickstarterproject-384416.DataSet1.FundData`
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory;
+
+SELECT Country, Category, Subcategory ,ROUND(AVG(Goal)) Average_Success_Goal,ROUND(AVG(Pledged)) Average_Success_Pledged,
+ROUND(AVG(Backers)) Average_Backers FROM `kickstarterproject-384416.DataSet1.FundData`
+WHERE State="Successful"
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory; 
+
+WITH Average_Goal_Pleadged_Backers AS (
+  SELECT Country c1, Category cat1, Subcategory subcat1,ROUND(AVG(Goal)) Average_Goal,ROUND(AVG(Pledged)) Average_Pledged,
+ROUND(AVG(Backers)) Average_Backers FROM `kickstarterproject-384416.DataSet1.FundData`
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory
+)
+,
+Average_Successfull_Goal_Pleadged_Backers AS(
+  SELECT Country c2, Category cat2, Subcategory subcat2,ROUND(AVG(Goal)) Average_Success_Goal,ROUND(AVG(Pledged)) Average_Success_Pledged,
+ROUND(AVG(Backers)) Average_Success_Backers FROM `kickstarterproject-384416.DataSet1.FundData`
+WHERE State="Successful"
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory
+)
+SELECT AGPB.c1 Country,AGPB.cat1 Category, AGPB.subcat1 SubCategory,AGPB.Average_Goal Avg_Goal,ASGPB.Average_Success_Goal Avg_Successfull_Goal,
+AGPB.Average_Pledged Avg_Pledged,ASGPB.Average_Success_Pledged Avg_Successfull_Pledged,AGPB.Average_Backers Avg_Backers,ASGPB.Average_Success_Backers
+Avg_Successfull_Backers
+FROM Average_Goal_Pleadged_Backers AGPB INNER JOIN Average_Successfull_Goal_Pleadged_Backers ASGPB
+ON AGPB.c1=ASGPB.c2 AND AGPB.cat1=ASGPB.cat2 AND AGPB.subcat1=ASGPB.subcat2
+ORDER BY AGPB.c1,AGPB.cat1,AGPB.subcat1;
+
+
+
+--Determining the effect of Launched & Deadline date difference on the success of the projects
+
+SELECT Country,Category,Subcategory,ROUND(AVG(DATE_DIFF(Deadline,Launched,MONTH))) AS Month_Diff
+FROM `kickstarterproject-384416.DataSet1.FundData`
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory;
+
+
+SELECT Country,Category,Subcategory,ROUND(AVG(DATE_DIFF(Deadline,Launched,MONTH))) AS Month_Diff
+FROM `kickstarterproject-384416.DataSet1.FundData`
+WHERE State="Successful"
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory;
+
+WITH Month_Diff AS(
+SELECT Country c1,Category cat1,Subcategory subcat1,ROUND(AVG(DATE_DIFF(Deadline,Launched,MONTH))) AS Month_Diff
+FROM `kickstarterproject-384416.DataSet1.FundData`
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory
+)
+,
+Success_Month_Diff AS(
+SELECT Country c2,Category cat2,Subcategory subcat2,ROUND(AVG(DATE_DIFF(Deadline,Launched,MONTH))) AS Success_Month_Diff
+FROM `kickstarterproject-384416.DataSet1.FundData`
+WHERE State="Successful"
+GROUP BY Country, Category, Subcategory
+ORDER BY Country, Category, Subcategory
+)
+
+SELECT MD.c1 Country, MD.cat1 Category, MD.subcat1 Subcategory, MD.Month_Diff MOnth_Diff, SMD.Success_Month_Diff
+FROM Month_Diff MD INNER JOIN Success_Month_Diff SMD
+ON MD.c1=SMD.c2 AND MD.cat1=SMD.cat2 And MD.subcat1=SMD.subcat2
+ORDER BY MD.c1,MD.cat1,MD.subcat1;
