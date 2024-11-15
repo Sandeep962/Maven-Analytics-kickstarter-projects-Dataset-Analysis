@@ -1,5 +1,6 @@
 ## Maven-Analytics-kickstarter-projects-Dataset-Analysis
 
+This repository consists (Maven Analytics Kickstarter Projects ProjectReport) **pdf** in which I have explained every step during this analysis, a (KickstarterProject_SQL) **SQL script** which I have created to analyze data in SQL and a (KickstartProject) **jupyter notebook** script I have created during this analysis.
 
 **Project Overview: -**
 This data analytics project focuses on analyzing a Kickstarter dataset obtained from Maven Analytics. The dataset encompasses various projects from different domains and countries, detailing their current status, goals, backers, and more. Following the structured data analytics process, the project covers the Ask, Prepare, Process, and Analyze stages.
